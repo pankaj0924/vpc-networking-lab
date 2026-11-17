@@ -142,10 +142,9 @@ Keep the screenshot filenames exactly as listed, or update these paths to match 
 ## Repository Structure
 
 ```text
-aws-vpc-networking-lab/
+vpc-networking-lab/
 ├── README.md
 ├── index.html
-├── style.css                 # Only if used by index.html
 ├── architecture-diagram.png
 └── images/
     ├── vpc-overview.png

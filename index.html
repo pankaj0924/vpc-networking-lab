@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Hands-on AWS VPC Networking Lab and Cloud Engineering Project">
+<title>AWS VPC Networking Lab | Cloud Portfolio</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#121212;        /* page: warm charcoal */
+  --bg-alt:#181818;    /* subtle section tint */
+  --card:#1f1f1f;      /* cards & diagram surfaces */
+  --border:#333333;    /* dividers */
+  --accent:#ff9900;    /* AWS orange */
+  --accent-2:#38bdf8;  /* network cyan */
+  --text:#ececec;
+  --muted:#a3a3a3;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-behavior:smooth;scroll-padding-top:calc(80px + env(safe-area-inset-top,0px))}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+.container{width:min(92%,1180px);margin-inline:auto}
+a{text-decoration:none;color:inherit}
+section{padding:clamp(56px,7vw,88px) 0}
+.alt{background:var(--bg-alt)}
+.num{color:var(--accent);font-size:11px;letter-spacing:2px;margin-bottom:10px}
+.title{font-size:clamp(25px,3vw,34px);font-weight:650;letter-spacing:-.7px;line-height:1.2}
+.sub{color:var(--muted);font-size:14px;margin:10px 0 30px;max-width:720px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:101}
+header{background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:env(safe-area-inset-top,0px);z-index:100}
+.navbar{min-height:72px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:17px;font-weight:bold;letter-spacing:1.5px}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:25px}
+.nav-links a{color:var(--muted);font-size:13px;transition:.2s}
+.nav-links a:hover{color:var(--accent)}
+.hero{padding:clamp(76px,10vw,120px) 0;background:radial-gradient(900px 400px at 85% 0,rgba(56,189,248,.12),transparent 70%),var(--bg)}
+.hero-content{max-width:790px}
+.eyebrow{color:var(--accent-2);font-size:12px;font-weight:bold;letter-spacing:2px;margin-bottom:20px}
+.hero h1{font-size:clamp(38px,6vw,62px);line-height:1.2;letter-spacing:-2px;margin-bottom:22px}
+.hero h1 span{color:var(--accent)}
+.hero p{max-width:650px;color:var(--muted);font-size:16px}
+.button{display:inline-block;margin-top:28px;padding:12px 24px;background:var(--accent);color:#1a1100;font-weight:bold;font-size:13px;border-radius:4px;transition:.2s}
+.button:hover{background:#ffb02e}
+.facts{border-block:1px solid var(--border);padding:23px 0;background:var(--bg-alt)}
+.facts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.fact small,.env small{display:block;color:var(--accent-2);font-size:10px;letter-spacing:1px}
+.fact strong{font-size:14px;font-weight:600}
+.overview{max-width:850px}
+.overview p{color:var(--muted);margin-bottom:15px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:25px}
+.obj{padding:20px 0;border-top:2px solid var(--accent)}
+.obj h3{font-size:16px;margin-bottom:8px}
+.obj p{color:var(--muted);font-size:13px}
+.service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
+.service{background:var(--card);padding:25px;transition:.2s}
+.service:hover{background:#272727}
+.service h3{font-size:16px;margin-bottom:8px}
+.service p{color:var(--muted);font-size:13px}
+.service small{display:inline-block;margin-top:12px;color:var(--accent);font-size:10px;letter-spacing:1px;text-transform:uppercase}
+.arch{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:35px 20px}
+.arch-title{text-align:center;font-size:17px;margin-bottom:25px}
+.node{max-width:500px;margin:auto;padding:13px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:4px;font-size:13px;font-weight:600}
+.node.hl{background:rgba(255,153,0,.08);border-color:var(--accent);color:var(--accent)}
+.arrow{text-align:center;color:var(--accent-2);font-size:20px;line-height:2}
+.divider{border:0;border-top:1px solid var(--border);margin:30px 0}
+.caption{text-align:center;color:var(--muted);font-size:12px;margin-top:20px}
+.subnets{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.subnet{border:1px solid var(--accent-2);border-radius:4px;padding:20px;background:rgba(56,189,248,.05);text-align:center}
+.subnet h3{font-size:14px;margin-bottom:12px}
+.subnet p{font-size:12px;color:var(--muted);margin:7px 0}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;align-items:stretch}
+.shot{min-width:0;background:linear-gradient(160deg,#222 0%,#1b1b1b 100%);border:1px solid var(--border);padding:12px;border-radius:10px;overflow:hidden;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;display:flex;flex-direction:column}.shot:hover{transform:translateY(-4px);border-color:rgba(255,153,0,.65);box-shadow:0 14px 34px rgba(0,0,0,.24)}
+.ph{min-height:190px;background:var(--bg);border:1px dashed var(--accent-2);display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--muted);font-size:13px}
+.shot img{display:block;width:100%;height:220px;object-fit:contain;object-position:center;background:#101010;border:1px solid #303030;border-radius:6px;padding:5px}.shot h3{font-size:14px;margin-top:14px;line-height:1.35}
+.shot p{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.55}
+.learning-grid{display:grid;grid-template-columns:1fr 1fr;gap:35px}
+.lcard{border-top:2px solid var(--accent-2);padding-top:20px}
+.lcard h3{font-size:17px;margin-bottom:12px}
+.lcard ul{list-style:none}
+.lcard li{padding:8px 0;border-bottom:1px solid var(--border);color:var(--muted);font-size:13px}
+.lcard li::before{content:"› ";color:var(--accent)}
+.env-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.env{border-top:1px solid var(--border);padding:15px 0}
+.env h3{font-size:15px;margin-top:5px}
+.contact-box{border-top:1px solid var(--border);padding-top:25px;max-width:700px}
+.contact-box p{color:var(--muted);font-size:14px}
+.links{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.link{padding:10px 18px;border:1px solid var(--accent);color:var(--accent);font-size:12px;border-radius:3px;transition:.2s}
+.link:hover{background:var(--accent);color:#1a1100}
+footer{background:var(--card);border-top:1px solid var(--border);text-align:center;padding:30px 15px}
+footer p{color:var(--muted);font-size:12px}
+@media(max-width:900px){.service-grid,.grid3,.env-grid,.facts-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.shot img{height:210px}}
+@media(max-width:600px){
+  .container{width:90%}
+  .navbar{flex-direction:column;gap:12px;padding:16px 0}
+  .nav-links{gap:15px;flex-wrap:wrap;justify-content:center}
+  .nav-links a{font-size:11px}
+  .hero{padding:75px 0}
+  .hero h1{letter-spacing:-1px}
+  section{padding:55px 0}
+  .service-grid,.grid3,.learning-grid,.gallery-grid,.env-grid,.subnets,.facts-grid{grid-template-columns:1fr}.shot img{height:auto;max-height:260px;aspect-ratio:16/10}
+  .title{font-size:25px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container navbar">
+    <div class="logo">AWS <span>/ CLOUD LAB</span></div>
+    <nav class="nav-links">
+      <a href="#about">About</a>
+      <a href="#services">Services</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container hero-content">
+    <div class="eyebrow">CLOUD ENGINEERING / HANDS-ON PROJECT</div>
+    <h1>AWS VPC<br><span>Networking Lab.</span></h1>
+    <p>Designing and deploying cloud infrastructure using Amazon Web Services. A practical project exploring VPC networking, EC2 deployment, security configurations and web server hosting.</p>
+    <a href="#about" class="button">Explore the project →</a>
+  </div>
+</section>
+
+<div class="facts">
+  <div class="container facts-grid">
+    <div class="fact"><small>CLOUD PROVIDER</small><strong>Amazon Web Services</strong></div>
+    <div class="fact"><small>COMPUTE</small><strong>EC2 / t3.micro</strong></div>
+    <div class="fact"><small>OPERATING SYSTEM</small><strong>Amazon Linux 2023</strong></div>
+    <div class="fact"><small>REGION</small><strong>Mumbai / ap-south-1</strong></div>
+  </div>
+</div>
+
+<section id="about">
+  <div class="container">
+    <div class="num">01 / PROJECT OVERVIEW</div>
+    <h2 class="title">About the project</h2>
+    <p class="sub">A practical exploration of AWS cloud networking and infrastructure.</p>
+    <div class="overview">
+      <p>The AWS VPC Networking Lab is a hands-on cloud infrastructure project focused on understanding how networking, compute resources and security configurations work within AWS.</p>
+      <p>A custom Virtual Private Cloud was configured with public and private subnets, route tables, an Internet Gateway, Security Groups, Network ACLs and an S3 Gateway Endpoint.</p>
+      <p>An Amazon EC2 instance running Amazon Linux 2023 was deployed in the public subnet. Apache HTTP Server was installed to host and serve a publicly accessible static website.</p>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="container">
+    <div class="num">02 / PROJECT OBJECTIVES</div>
+    <h2 class="title">What this project demonstrates</h2>
+    <p class="sub">The practical goals behind the implementation.</p>
+    <div class="grid3">
+      <div class="obj"><h3>Cloud Networking</h3><p>Understand VPC architecture, subnet segmentation, routing and connectivity.</p></div>
+      <div class="obj"><h3>Network Security</h3><p>Configure instance and subnet-level network access controls.</p></div>
+      <div class="obj"><h3>Server Deployment</h3><p>Deploy an EC2 instance and configure Apache to host a website.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="services">
+  <div class="container">
+    <div class="num">03 / TECHNOLOGY STACK</div>
+    <h2 class="title">AWS services &amp; technologies</h2>
+    <p class="sub">Services implemented or explored during this lab.</p>
+    <div class="service-grid">
+      <div class="service"><h3>Amazon VPC</h3><p>Custom VPC, CIDR planning and subnet architecture.</p><small>Networking</small></div>
+      <div class="service"><h3>Amazon EC2</h3><p>Virtual server deployment using Amazon Linux 2023.</p><small>Compute</small></div>
+      <div class="service"><h3>Security Groups</h3><p>SSH and HTTP access rules for EC2 networking.</p><small>Security</small></div>
+      <div class="service"><h3>Internet Gateway</h3><p>Internet connectivity for the public subnet.</p><small>Connectivity</small></div>
+      <div class="service"><h3>Amazon S3</h3><p>Object storage and S3 Gateway Endpoint access.</p><small>Storage</small></div>
+      <div class="service"><h3>Apache HTTP Server</h3><p>Installed and configured to serve a static website.</p><small>Web Server</small></div>
+      <div class="service"><h3>Route Tables</h3><p>Subnet route associations and traffic routing.</p><small>Networking</small></div>
+      <div class="service"><h3>Network ACL</h3><p>Subnet-level traffic filtering and access control.</p><small>Security</small></div>
+      <div class="service"><h3>AWS IAM</h3><p>Identity and access management concepts.</p><small>Access Management</small></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="architecture">
+  <div class="container">
+    <div class="num">04 / INFRASTRUCTURE DESIGN</div>
+    <h2 class="title">AWS network architecture</h2>
+    <p class="sub">Simplified representation of the VPC components and traffic paths.</p>
+    <div class="arch">
+      <h3 class="arch-title">Public website traffic path</h3>
+      <div class="node">Internet / User Browser</div><div class="arrow">↓</div>
+      <div class="node">Internet Gateway</div><div class="arrow">↓</div>
+      <div class="node hl">AWS VPC — 10.0.0.0/16</div><div class="arrow">↓</div>
+      <div class="node">Public Route Table — 0.0.0.0/0 → IGW</div><div class="arrow">↓</div>
+      <div class="node">Public Subnet — EC2 Instance</div><div class="arrow">↓</div>
+      <div class="node">Security Group — HTTP Port 80</div><div class="arrow">↓</div>
+      <div class="node hl">Apache HTTP Server — Hosted Website</div>
+
+      <hr class="divider">
+
+      <h3 class="arch-title">Private subnet and S3 access</h3>
+      <div class="subnets">
+        <div class="subnet"><h3>Private Subnet 1</h3><p>10.0.128.0/20</p><p>Private Route Table 1</p><p>↓</p><p>S3 Gateway Endpoint</p></div>
+        <div class="subnet"><h3>Private Subnet 2</h3><p>10.0.144.0/20</p><p>Private Route Table 2</p><p>↓</p><p>S3 Gateway Endpoint</p></div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="node hl">Amazon S3</div>
+      <p class="caption">Private subnets use the S3 Gateway Endpoint for S3 traffic. No NAT Gateway is configured in this lab.</p>
+    </div>
+  </div>
+</section>
+
+
+<section id="screenshots">
+  <div class="container">
+    <div class="num">05 / IMPLEMENTATION</div>
+    <h2 class="title">Project screenshots</h2>
+    <p class="sub">
+      Actual AWS console and server screenshots from the Cloud Support Lab.
+    </p>
+
+    <div class="gallery-grid">
+      <article class="shot">
+        <img src="images/vpc-overview.png" alt="AWS VPC configuration overview" loading="lazy" decoding="async">
+        <h3>VPC Configuration</h3>
+        <p>Custom VPC and CIDR configuration.</p>
+      </article>
+
+      <article class="shot">
+        <img src="images/subnets.png" alt="Public and private subnet configuration" loading="lazy" decoding="async">
+        <h3>Public and Private Subnets</h3>
+        <p>Subnet layout across two Availability Zones.</p>
+      </article>
+
+      <article class="shot">
+        <img src="images/route-table-explicit.png" alt="Explicit subnet associations in the route table" loading="lazy" decoding="async">
+        <h3>Route Table — Explicit Associations</h3>
+        <p>Public subnet associations configured on the route table.</p>
+      </article>
+
+      <article class="shot">
+        <img src="images/route-table-main-association.png" alt="Main route table subnet associations" loading="lazy" decoding="async">
+        <h3>Main Route Table</h3>
+        <p>Subnets using the main route table by default.</p>
+      </article>
+
+      <article class="shot">
+        <img src="images/security-group.png" alt="EC2 security group rules" loading="lazy" decoding="async">
+        <h3>Security Group</h3>
+        <p>Configured inbound HTTP and SSH rules.</p>
+      </article>
+
+      <article class="shot">
+        <img src="images/ec2-instance.png" alt="Amazon EC2 instance details" loading="lazy" decoding="async">
+        <h3>EC2 Instance</h3>
+        <p>Amazon Linux 2023 instance deployment.</p>
+      </article>
+
+      <article class="shot">
+        <img src="images/apache-status.png" alt="Apache HTTP Server status" loading="lazy" decoding="async">
+        <h3>Apache Server</h3>
+        <p>Apache installation and service verification.</p>
+      </article>
+
+      <article class="shot">
+        <img src="images/s3-endpoint.png" alt="S3 Gateway Endpoint configuration" loading="lazy" decoding="async">
+        <h3>S3 Gateway Endpoint</h3>
+        <p>Endpoint and private route table association.</p>
+      </article>
+
+      <article class="shot">
+        <img src="images/hosted-website.png" alt="Website hosted on the EC2 instance" loading="lazy" decoding="async">
+        <h3>Hosted Website</h3>
+        <p>Publicly accessible website hosted on EC2.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+
+<section class="alt" id="learning">
+  <div class="container">
+    <div class="num">06 / LEARNING OUTCOMES</div>
+    <h2 class="title">Technical skills explored</h2>
+    <p class="sub">Practical concepts covered during the project.</p>
+    <div class="learning-grid">
+      <div class="lcard"><h3>Cloud Networking</h3><ul>
+        <li>Custom VPC and CIDR planning</li>
+        <li>Public and private subnet configuration</li>
+        <li>Internet Gateway and route tables</li>
+        <li>Security Groups and Network ACLs</li>
+        <li>S3 Gateway Endpoint concepts</li></ul></div>
+      <div class="lcard"><h3>Compute &amp; Server Management</h3><ul>
+        <li>EC2 instance deployment</li>
+        <li>SSH access and troubleshooting</li>
+        <li>Linux server administration</li>
+        <li>Apache installation and configuration</li>
+        <li>HTTP connectivity testing</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="num">07 / CONFIGURATION</div>
+    <h2 class="title">Project environment</h2>
+    <p class="sub">Infrastructure details used in this implementation.</p>
+    <div class="env-grid">
+      <div class="env"><small>CLOUD PROVIDER</small><h3>Amazon Web Services</h3></div>
+      <div class="env"><small>VPC CIDR</small><h3>10.0.0.0/16</h3></div>
+      <div class="env"><small>INSTANCE TYPE</small><h3>EC2 / t3.micro</h3></div>
+      <div class="env"><small>OPERATING SYSTEM</small><h3>Amazon Linux 2023</h3></div>
+      <div class="env"><small>WEB SERVER</small><h3>Apache HTTP Server</h3></div>
+      <div class="env"><small>AWS REGION</small><h3>Mumbai / ap-south-1</h3></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="contact">
+  <div class="container">
+    <div class="num">08 / CONTACT</div>
+    <h2 class="title">Let’s connect</h2>
+    <p class="sub">Interested in cloud infrastructure, AWS and technology.</p>
+    <div class="contact-box">
+      <p>For professional opportunities, collaboration or discussions about cloud engineering, feel free to connect.</p>
+      <div class="links">
+        <!-- Replace these placeholders with your real details -->
+        <a class="link" href="mailto:YOUR_EMAIL">Email</a>
+        <a class="link" href="YOUR_LINKEDIN_URL" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>A hands-on Cloud Engineering Project</p>
+    <p>AWS VPC Networking Lab · Amazon EC2 · Amazon Linux 2023</p>
+    <p>© 2026 Cloud Networking Project</p>
+  </div>
+</footer>
+
+</body>
+</html>
